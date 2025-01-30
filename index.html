@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>مترجم العالم المتكامل</title>
+    <style>
+        /* التصميم العام */
+        body {
+            font-family: Arial, sans-serif;
+            background: #f0f2f5;
+            margin: 0;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            animation: fadeIn 1s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        h1 {
+            animation: titleBounce 1.5s ease-in-out;
+            text-align: center;
+        }
+
+        @keyframes titleBounce {
+            0% { transform: scale(0.8); opacity: 0; }
+            60% { transform: scale(1.1); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        /* تصميم حقول الإدخال */
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .custom-select {
+            width: 200px;
+            position: relative;
+        }
+
+        .select-header {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .select-header:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        }
+
+        .select-options {
+            position: absolute;
+            top: 100%;
+            width: 100%;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            max-height: 300px;
+            overflow-y: auto;
+            display: none;
+            z-index: 1000;
+            animation: slideDown 0.3s ease-out;
+        }
+
+        @keyframes slideDown {
+            from { transform: translateY(-10px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .search-box {
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .option-item {
+            padding: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.2s ease;
+        }
+
+        .option-item:hover {
+            background: #f0f0f0;
+            transform: translateX(10px);
+        }
+
+        textarea {
+            width: 100%;
+            height: 150px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            resize: vertical;
+            animation: slideIn 0.8s ease-out;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(100px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        /* أزرار التحكم */
+        button {
+            background: #1a73e8;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            transform-origin: center;
+        }
+
+        button:hover {
+            background: #1557b0;
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(26, 115, 232, 0.3);
+        }
+
+        /* نتيجة الترجمة */
+        #result {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+            min-height: 100px;
+            animation: resultFadeIn 0.8s ease-out;
+        }
+
+        @keyframes resultFadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* الرسائل التحذيرية */
+        .alert {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            display: none;
+            animation: alertPulse 0.5s ease-out;
+        }
+
+        @keyframes alertPulse {
+            from { transform: scale(0.9); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        .flag {
+            font-size: 20px;
+            transition: transform 0.3s ease;
+        }
+
+        .option-item:hover .flag {
+            transform: rotate(15deg) scale(1.2);
+        }
+
+        .loading::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.6), transparent);
+            animation: loadingShimmer 1.5s infinite;
+        }
+
+        @keyframes loadingShimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>مترجم العالم 🌍</h1>
+        
+        <div class="input-group">
+            <div class="custom-select" id="sourceSelect">
+                <div class="select-header" onclick="toggleOptions('source')">
+                    <span class="flag" id="sourceFlag">🇺🇸</span>
+                    <span id="sourceLangText">الإنجليزية</span>
+                </div>
+                <div class="select-options" id="sourceOptions">
+                    <div class="search-box">
+                        <input type="text" placeholder="ابحث عن دولة..." oninput="filterCountries(this.value, 'source')">
+                    </div>
+                </div>
+            </div>
+
+            <button onclick="swapLanguages()">↔ تبديل</button>
+
+            <div class="custom-select" id="targetSelect">
+                <div class="select-header" onclick="toggleOptions('target')">
+                    <span class="flag" id="targetFlag">🇸🇦</span>
+                    <span id="targetLangText">العربية</span>
+                </div>
+                <div class="select-options" id="targetOptions">
+                    <div class="search-box">
+                        <input type="text" placeholder="ابحث عن دولة..." oninput="filterCountries(this.value, 'target')">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <textarea id="inputText" placeholder="أدخل النص هنا..."></textarea>
+        
+        <button onclick="translateText()">ترجم الآن</button>
+        <button onclick="copyText()">نسخ النتيجة</button>
+        
+        <div class="alert" id="alert">جارِ الترجمة...</div>
+        <div id="result"></div>
+    </div>
+
+    <script>
+        // قائمة جميع الدول مع الرموز واللغات
+        const countries = [
+            { name: "أفغانستان", code: "af", lang: "ps", flag: "🇦🇫" },
+            { name: "ألبانيا", code: "al", lang: "sq", flag: "🇦🇱" },
+            { name: "الجزائر", code: "dz", lang: "ar", flag: "🇩🇿" },
+            { name: "الأرجنتين", code: "ar", lang: "es", flag: "🇦🇷" },
+            { name: "أستراليا", code: "au", lang: "en", flag: "🇦🇺" },
+            { name: "النمسا", code: "at", lang: "de", flag: "🇦🇹" },
+            { name: "البحرين", code: "bh", lang: "ar", flag: "🇧🇭" },
+            { name: "بنغلاديش", code: "bd", lang: "bn", flag: "🇧🇩" },
+            { name: "بلجيكا", code: "be", lang: "nl", flag: "🇧🇪" },
+            { name: "البرازيل", code: "br", lang: "pt", flag: "🇧🇷" },
+            { name: "كندا", code: "ca", lang: "en", flag: "🇨🇦" },
+            { name: "الصين", code: "cn", lang: "zh", flag: "🇨🇳" },
+            { name: "كولومبيا", code: "co", lang: "es", flag: "🇨🇴" },
+            { name: "مصر", code: "eg", lang: "ar", flag: "🇪🇬" },
+            { name: "فرنسا", code: "fr", lang: "fr", flag: "🇫🇷" },
+            { name: "ألمانيا", code: "de", lang: "de", flag: "🇩🇪" },
+            { name: "الهند", code: "in", lang: "hi", flag: "🇮🇳" },
+            { name: "إندونيسيا", code: "id", lang: "id", flag: "🇮🇩" },
+            { name: "إيران", code: "ir", lang: "fa", flag: "🇮🇷" },
+            { name: "العراق", code: "iq", lang: "ar", flag: "🇮🇶" },
+            { name: "إيطاليا", code: "it", lang: "it", flag: "🇮🇹" },
+            { name: "اليابان", code: "jp", lang: "ja", flag: "🇯🇵" },
+            { name: "الأردن", code: "jo", lang: "ar", flag: "🇯🇴" },
+            { name: "كينيا", code: "ke", lang: "sw", flag: "🇰🇪" },
+            { name: "الكويت", code: "kw", lang: "ar", flag: "🇰🇼" },
+            { name: "لبنان", code: "lb", lang: "ar", flag: "🇱🇧" },
+            { name: "المغرب", code: "ma", lang: "ar", flag: "🇲🇦" },
+            { name: "المكسيك", code: "mx", lang: "es", flag: "🇲🇽" },
+            { name: "نيجيريا", code: "ng", lang: "en", flag: "🇳🇬" },
+            { name: "عُمان", code: "om", lang: "ar", flag: "🇴🇲" },
+            { name: "باكستان", code: "pk", lang: "ur", flag: "🇵🇰" },
+            { name: "فلسطين", code: "ps", lang: "ar", flag: "🇵🇸" },
+            { name: "فلسطين المحتلة", code: "il", lang: "he", flag: "🇮🇱" }, // الإضافة المطلوبة
+            { name: "قطر", code: "qa", lang: "ar", flag: "🇶🇦" },
+            { name: "روسيا", code: "ru", lang: "ru", flag: "🇷🇺" },
+            { name: "السعودية", code: "sa", lang: "ar", flag: "🇸🇦" },
+            { name: "الصومال", code: "so", lang: "so", flag: "🇸🇴" },
+            { name: "جنوب أفريقيا", code: "za", lang: "en", flag: "🇿🇦" },
+            { name: "كوريا الجنوبية", code: "kr", lang: "ko", flag: "🇰🇷" },
+            { name: "إسبانيا", code: "es", lang: "es", flag: "🇪🇸" },
+            { name: "السودان", code: "sd", lang: "ar", flag: "🇸🇩" },
+            { name: "السويد", code: "se", lang: "sv", flag: "🇸🇪" },
+            { name: "سوريا", code: "sy", lang: "ar", flag: "🇸🇾" },
+            { name: "تونس", code: "tn", lang: "ar", flag: "🇹🇳" },
+            { name: "تركيا", code: "tr", lang: "tr", flag: "🇹🇷" },
+            { name: "الإمارات", code: "ae", lang: "ar", flag: "🇦🇪" },
+            { name: "المملكة المتحدة", code: "gb", lang: "en", flag: "🇬🇧" },
+            { name: "الولايات المتحدة", code: "us", lang: "en", flag: "🇺🇸" },
+            { name: "اليمن", code: "ye", lang: "ar", flag: "🇾🇪" }
+        ];
+
+        // ... باقي الكود الأصلي دون أي تعديلات ...
+        // (جميع الدوال والوظائف كما هي بدون تغيير)
+        
+        function initSelect(selectId, defaultCountry) {
+            const container = document.getElementById(selectId + 'Options');
+            countries.forEach(country => {
+                const div = document.createElement('div');
+                div.className = 'option-item';
+                div.innerHTML = `
+                    ${country.flag}
+                    <span>${country.name}</span>
+                `;
+                div.onclick = () => selectCountry(country, selectId);
+                container.appendChild(div);
+            });
+            
+            const defaultCountryObj = countries.find(c => c.code === defaultCountry);
+            selectCountry(defaultCountryObj, selectId);
+        }
+
+        function selectCountry(country, type) {
+            const prefix = type === 'source' ? 'source' : 'target';
+            document.getElementById(prefix + 'Flag').textContent = country.flag;
+            document.getElementById(prefix + 'LangText').textContent = country.name;
+            document.getElementById(prefix + 'Options').style.display = 'none';
+            window[prefix + 'Lang'] = country.lang;
+        }
+
+        function filterCountries(query, type) {
+            const options = document.getElementById(type + 'Options').children;
+            Array.from(options).forEach(option => {
+                if (option.className === 'search-box') return;
+                const text = option.querySelector('span').textContent.toLowerCase();
+                option.style.display = text.includes(query.toLowerCase()) ? 'flex' : 'none';
+            });
+        }
+
+        function toggleOptions(type) {
+            const options = document.getElementById(type + 'Options');
+            options.style.display = options.style.display === 'block' ? 'none' : 'block';
+        }
+
+        async function translateText() {
+            const text = document.getElementById('inputText').value;
+            const sourceLang = window.sourceLang;
+            const targetLang = window.targetLang;
+            const resultDiv = document.getElementById('result');
+            const alertDiv = document.getElementById('alert');
+
+            if (!text) {
+                showAlert('يرجى إدخال نص للترجمة', 'red');
+                return;
+            }
+
+            try {
+                alertDiv.style.display = 'block';
+                alertDiv.textContent = 'جارِ الترجمة...';
+                resultDiv.classList.add('loading');
+                
+                const response = await fetch(
+                    `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${sourceLang}|${targetLang}`
+                );
+                
+                const data = await response.json();
+                resultDiv.innerHTML = data.responseData.translatedText;
+                alertDiv.style.display = 'none';
+                resultDiv.classList.remove('loading');
+                
+            } catch (error) {
+                showAlert('حدث خطأ في الترجمة!', 'red');
+                console.error(error);
+                resultDiv.classList.remove('loading');
+            }
+        }
+
+        function copyText() {
+            const result = document.getElementById('result');
+            navigator.clipboard.writeText(result.innerText)
+                .then(() => {
+                    showAlert('تم النسخ!', 'green');
+                    result.style.animation = 'copyPulse 0.5s';
+                    setTimeout(() => result.style.animation = '', 500);
+                })
+                .catch(() => showAlert('فشل النسخ!', 'red'));
+        }
+
+        function showAlert(message, color) {
+            const alertDiv = document.getElementById('alert');
+            alertDiv.style.display = 'block';
+            alertDiv.textContent = message;
+            alertDiv.style.background = color === 'red' ? '#ff4444' : '#4CAF50';
+            alertDiv.style.color = 'white';
+            
+            setTimeout(() => {
+                alertDiv.style.display = 'none';
+            }, 3000);
+        }
+
+        function swapLanguages() {
+            const temp = window.sourceLang;
+            window.sourceLang = window.targetLang;
+            window.targetLang = temp;
+            
+            const sourceFlag = document.getElementById('sourceFlag');
+            const targetFlag = document.getElementById('targetFlag');
+            [sourceFlag.textContent, targetFlag.textContent] = [targetFlag.textContent, sourceFlag.textContent];
+            
+            const sourceName = document.getElementById('sourceLangText');
+            const targetName = document.getElementById('targetLangText');
+            [sourceName.textContent, targetName.textContent] = [targetName.textContent, sourceName.textContent];
+            
+            sourceFlag.style.transform = 'rotate(360deg)';
+            targetFlag.style.transform = 'rotate(360deg)';
+            setTimeout(() => {
+                sourceFlag.style.transform = '';
+                targetFlag.style.transform = '';
+            }, 500);
+        }
+
+        initSelect('source', 'us');
+        initSelect('target', 'sa');
+
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.custom-select')) {
+                document.querySelectorAll('.select-options').forEach(el => {
+                    el.style.display = 'none';
+                });
+            }
+        });
+    </script>
+</body>
+</html>
